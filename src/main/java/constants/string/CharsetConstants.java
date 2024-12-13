@@ -13,22 +13,17 @@ package constants.string;
  * CharsetConstants
  */
 
-import com.esotericsoftware.yamlbeans.YamlReader;
-import config.YamlConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Optional;
 
 public class CharsetConstants {
     private static final Logger log = LoggerFactory.getLogger(CharsetConstants.class);
+    private static final String CHARSET_ENV = "SERVER_CHARSET";
     public static final Charset CHARSET = loadCharset();
 
     private enum Language {
@@ -61,17 +56,7 @@ public class CharsetConstants {
     }
 
     private static String loadCharsetFromConfig() {
-        try {
-            YamlReader reader = new YamlReader(Files.newBufferedReader(Path.of(YamlConfig.CONFIG_FILE_NAME), StandardCharsets.US_ASCII));
-            reader.getConfig().readConfig.setIgnoreUnknownProperties(true);
-            StrippedYamlConfig charsetConfig = reader.read(StrippedYamlConfig.class);
-            reader.close();
-            return charsetConfig.server.CHARSET;
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException("Could not read config file " + YamlConfig.CONFIG_FILE_NAME + ": " + e.getMessage());
-        } catch (IOException e) {
-            throw new RuntimeException("Could not successfully parse charset from config file " + YamlConfig.CONFIG_FILE_NAME + ": " + e.getMessage());
-        }
+        return System.getenv(CHARSET_ENV);
     }
 
     private static Charset loadCharset() {
@@ -82,13 +67,5 @@ public class CharsetConstants {
         }
 
         return StandardCharsets.US_ASCII;
-    }
-
-    private static class StrippedYamlConfig {
-        public StrippedServerConfig server;
-
-        private static class StrippedServerConfig {
-            public String CHARSET;
-        }
     }
 }
