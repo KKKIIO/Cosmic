@@ -1,21 +1,24 @@
 package tools;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import config.YamlConfig;
-import database.note.NoteRowMapper;
-import org.jdbi.v3.core.Handle;
-import org.jdbi.v3.core.Jdbi;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
+import javax.sql.DataSource;
+
+import org.jdbi.v3.core.Handle;
+import org.jdbi.v3.core.Jdbi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+import config.YamlConfig;
+import database.note.NoteRowMapper;
 
 /**
  * @author Frz (Big Daddy)
@@ -63,7 +66,10 @@ public class DatabaseConnection {
         config.setInitializationFailTimeout(SECONDS.toMillis(initFailTimeoutSeconds));
         config.setConnectionTimeout(SECONDS.toMillis(30)); // Hikari default
         config.setMaximumPoolSize(10); // Hikari default
-
+        var keepaliveTimeSetting = System.getenv("HIKARI_KEEPALIVE_TIME");
+        if (keepaliveTimeSetting != null) {
+            config.setKeepaliveTime(Integer.parseInt(keepaliveTimeSetting));
+        }
         config.addDataSourceProperty("cachePrepStmts", true);
         config.addDataSourceProperty("prepStmtCacheSize", 25);
         config.addDataSourceProperty("prepStmtCacheSqlLimit", 2048);
@@ -74,7 +80,8 @@ public class DatabaseConnection {
     /**
      * Initiate connection to the database
      *
-     * @return true if connection to the database initiated successfully, false if not successful
+     * @return true if connection to the database initiated successfully, false if
+     *         not successful
      */
     public static boolean initializeConnectionPool() {
         if (dataSource != null) {
